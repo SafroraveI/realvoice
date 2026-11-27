@@ -21,6 +21,7 @@ jobs:
           cp index.html script.js manifest.json sw.js *.png www/
           npm install
           npx cap add android
+          echo 'ext { rgcfaIncludeGoogle = true }' >> android/variables.gradle
           mkdir -p ~/.android
           cp debug.keystore ~/.android/debug.keystore
           cp google-services.json android/app/google-services.json
