@@ -1,0 +1,7 @@
+{
+  "appId": "com.realvoice.app",
+  "appName": "REAL VOICE",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": false }
+}
