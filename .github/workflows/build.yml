@@ -23,7 +23,11 @@ jobs:
           npx cap add android
           sed -i 's/^ext {/ext {\n    rgcfaIncludeGoogle = true/' android/variables.gradle
           mkdir -p ~/.android
-          IM=$(command -v magick || command -v convert)
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq imagemagick
+          IM=$(command -v magick || command -v convert || true)
+          echo "ImageMagick: $IM"
+          [ -n "$IM" ] || { echo 'ImageMagick missing'; exit 1; }
           for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
             n=${d%%:*}; s=${d##*:}
             $IM app-icon.png -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher.png
