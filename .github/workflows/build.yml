@@ -23,17 +23,24 @@ jobs:
           npx cap add android
           sed -i 's/^ext {/ext {\n    rgcfaIncludeGoogle = true/' android/variables.gradle
           mkdir -p ~/.android
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq imagemagick
-          IM=$(command -v magick || command -v convert || true)
-          echo "ImageMagick: $IM"
-          [ -n "$IM" ] || { echo 'ImageMagick missing'; exit 1; }
-          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-            n=${d%%:*}; s=${d##*:}
-            $IM app-icon.png -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher.png
-            $IM app-icon.png -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher_round.png
-          done
-          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          SRC=""
+          [ -f icon-512.png ] && SRC=icon-512.png
+          [ -f app-icon.png ] && SRC=app-icon.png
+          if [ -n "$SRC" ]; then
+            echo "Using icon: $SRC"
+            sudo apt-get install -y -qq imagemagick || true
+            IM=$(command -v magick || command -v convert || true)
+            if [ -n "$IM" ]; then
+              for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+                n=${d%%:*}; s=${d##*:}
+                $IM "$SRC" -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher.png || true
+                $IM "$SRC" -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher_round.png || true
+              done
+              rm -rf android/app/src/main/res/mipmap-anydpi-v26
+            fi
+          else
+            echo "No icon file found, using default icon"
+          fi
           cp debug.keystore ~/.android/debug.keystore
           cp google-services.json android/app/google-services.json
           PERMS='<uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/><uses-permission android:name="android.permission.CAMERA"/>'
