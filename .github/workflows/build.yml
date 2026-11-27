@@ -18,7 +18,7 @@ jobs:
       - name: Build
         run: |
           mkdir www
-          cp index.html admin.html script.js manifest.json sw.js *.png www/
+          cp index.html admin.html script.js manifest.json sw.js ice-theme.css *.png www/
           npm install
           npx cap add android
           sed -i 's/^ext {/ext {\n    rgcfaIncludeGoogle = true/' android/variables.gradle
