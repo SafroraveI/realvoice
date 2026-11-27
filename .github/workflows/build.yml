@@ -23,10 +23,11 @@ jobs:
           npx cap add android
           sed -i 's/^ext {/ext {\n    rgcfaIncludeGoogle = true/' android/variables.gradle
           mkdir -p ~/.android
+          IM=$(command -v magick || command -v convert)
           for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
             n=${d%%:*}; s=${d##*:}
-            convert app-icon.png -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher.png
-            convert app-icon.png -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher_round.png
+            $IM app-icon.png -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher.png
+            $IM app-icon.png -resize ${s}x${s} android/app/src/main/res/mipmap-$n/ic_launcher_round.png
           done
           rm -rf android/app/src/main/res/mipmap-anydpi-v26
           cp debug.keystore ~/.android/debug.keystore
