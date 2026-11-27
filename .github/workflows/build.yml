@@ -42,6 +42,11 @@ jobs:
             echo "No icon file found, using default icon"
           fi
           cp debug.keystore ~/.android/debug.keystore
+          cp debug.keystore android/app/debug.keystore
+          echo "=== REPO KEYSTORE ==="
+          keytool -list -v -keystore debug.keystore -storepass android | grep -E "Alias|SHA1" || true
+          sed -i '0,/^android {/s//android {\n    signingConfigs {\n        debug {\n            storeFile file("debug.keystore")\n            storePassword "android"\n            keyAlias "androiddebugkey"\n            keyPassword "android"\n        }\n    }/' android/app/build.gradle
+          grep -n -A8 "signingConfigs" android/app/build.gradle || true
           cp google-services.json android/app/google-services.json
           PERMS='<uses-permission android:name="android.permission.RECORD_AUDIO"/><uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/><uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/><uses-permission android:name="android.permission.CAMERA"/>'
           sed -i "s#<application#${PERMS}<application#" android/app/src/main/AndroidManifest.xml
