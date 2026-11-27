@@ -180,7 +180,22 @@ $("nav").innerHTML=SECS.map(s=>`<button data-go="${s[0]}">${s[1]}</button>`).joi
 function go(k){document.querySelectorAll("[data-sec]").forEach(e=>e.classList.toggle("hidden",e.dataset.sec!==k));document.querySelectorAll("[data-go]").forEach(b=>b.classList.toggle("on",b.dataset.go===k));if(k==="cup")loadCup()}
 $("nav").onclick=e=>{const b=e.target.closest("[data-go]");if(b)go(b.dataset.go)};go("dash");
 
-$("login-btn").onclick=()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(()=>toast("فشل تسجيل الدخول"));
+$("login-btn").onclick=async()=>{
+  try{
+    const cap=window.Capacitor;
+    const native=!!(cap&&cap.isNativePlatform&&cap.isNativePlatform());
+    if(native){
+      const FA=cap.Plugins&&cap.Plugins.FirebaseAuthentication;
+      if(!FA)throw{code:"native/no-plugin"};
+      const r=await FA.signInWithGoogle({skipNativeAuth:true});
+      const t=r&&r.credential&&r.credential.idToken;
+      if(!t)throw{code:"native/no-token"};
+      await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(t));
+    }else{
+      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    }
+  }catch(e){toast("فشل تسجيل الدخول ("+((e&&e.code)||"error")+")")}
+};
 $("logout").onclick=()=>auth.signOut();
 auth.onAuthStateChanged(async u=>{
   if(!u){$("login").classList.remove("hidden");$("app").classList.add("hidden");return}
