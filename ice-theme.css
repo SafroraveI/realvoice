@@ -1,0 +1,63 @@
+/* REAL VOICE — Ice Theme (نفس ألوان قسم الملف الشخصي على كل التطبيق). لا يغيّر أي id أو JS */
+:root{ /* الوضع الداكن: كحلي جليدي */
+  --bg:#0a1a2f; --bg-2:#0f2540; --card:#122b4a; --card-2:#183760;
+  --ink:#eaf6ff; --muted:#8fb4d6; --line:rgba(140,200,255,.18);
+  --brand:#4ca9ff; --brand-2:#7cd4ff; --cyan:#9cecff;
+  --shadow:0 10px 28px rgba(0,20,50,.5);
+}
+body.light-theme{ /* الوضع الفاتح: ثلج وأزرق سماوي */
+  --bg:#eaf6ff; --bg-2:#d9eefc; --card:#ffffff; --card-2:#e4f3ff;
+  --ink:#103d70; --muted:#52779c; --line:rgba(83,160,220,.34);
+  --brand:#2f8fe6; --brand-2:#5bc0ff; --cyan:#5bc0ff;
+  --shadow:0 12px 30px rgba(16,74,130,.16);
+}
+html,body{background:var(--bg)}
+body.light-theme,body.light-theme #app,body.light-theme .page{
+  background:radial-gradient(ellipse at 15% 0,#fff,transparent 40%),
+             radial-gradient(ellipse at 90% 15%,rgba(109,205,255,.35),transparent 42%),var(--bg)}
+
+/* الشريط العلوي: جليد */
+.topbar{background:linear-gradient(135deg,#7cc9fa 0%,#d8f2ff 45%,#6aaee9 100%)!important;
+  border-bottom:1px solid rgba(255,255,255,.7)!important;box-shadow:0 6px 18px rgba(16,74,130,.18)}
+.brand-title{color:#103d70!important;font-weight:900}
+.mode-pill{background:rgba(255,255,255,.6)!important;color:#103d70!important}
+.icon-btn{background:rgba(255,255,255,.55)!important;border:1px solid rgba(255,255,255,.8)!important;
+  border-radius:14px!important;color:#103d70}
+
+/* البحث والحقول: زجاج مثلّج */
+.search-box input,input,textarea,select{background:rgba(255,255,255,.1);border:1px solid var(--line);
+  border-radius:14px;color:var(--ink)}
+body.light-theme .search-box input,body.light-theme input,body.light-theme textarea,body.light-theme select{background:#fff}
+
+/* التبويبات */
+.tab{background:var(--card)!important;border:1px solid var(--line)!important;border-radius:14px!important;color:var(--muted)}
+.tab.active{background:linear-gradient(135deg,#4ca9ff,#8fdcff)!important;color:#fff!important;
+  border-color:transparent!important;box-shadow:0 6px 14px rgba(76,169,255,.35)}
+
+/* الأزرار */
+.btn{background:linear-gradient(135deg,#3b9bf0,#7cd4ff)!important;color:#fff!important;border:0;
+  border-radius:14px;box-shadow:0 6px 14px rgba(59,155,240,.3);font-weight:800}
+.btn.ghost{background:var(--card-2)!important;color:var(--brand)!important;border:1px solid var(--line)!important;box-shadow:none}
+.btn.ok{background:linear-gradient(135deg,#22b573,#6fe0b0)!important}
+.btn.bad{background:linear-gradient(135deg,#e5484d,#ff8a8a)!important}
+.btn.gold{background:linear-gradient(135deg,#d8b66a,#f3dc9a)!important;color:#4a3608!important}
+
+/* العناوين */
+.sec-title{color:var(--ink);font-weight:900}
+
+/* بطاقات الغرف */
+.room-sq{background:linear-gradient(155deg,rgba(255,255,255,.12),rgba(124,212,255,.1))!important;
+  border:1px solid rgba(109,190,239,.5)!important;border-radius:22px!important;
+  box-shadow:0 10px 24px rgba(16,74,130,.18),inset 0 1px 0 rgba(255,255,255,.4)}
+body.light-theme .room-sq{background:linear-gradient(155deg,#fff,#d7efff)!important}
+.room-sq-name{color:var(--ink)}
+
+/* الشريط السفلي: زجاج جليدي */
+.bottom-nav{background:rgba(15,37,64,.85)!important;backdrop-filter:blur(14px);
+  border-top:1px solid var(--line)!important}
+body.light-theme .bottom-nav{background:rgba(234,246,255,.9)!important}
+.navbtn{background:transparent!important;color:var(--muted);border-radius:16px}
+.navbtn.active{background:linear-gradient(135deg,rgba(76,169,255,.3),rgba(156,236,255,.35))!important;color:var(--brand)!important}
+
+/* عام */
+.card,.glass,.list-item{border:1px solid var(--line);border-radius:18px}
