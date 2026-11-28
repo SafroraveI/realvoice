@@ -18,7 +18,15 @@ jobs:
       - name: Build
         run: |
           mkdir www
-          cp index.html admin.html script.js manifest.json sw.js ice-theme.css *.png www/
+          echo "=== files in repo ==="
+          ls -1
+          for f in index.html script.js; do
+            [ -f "$f" ] || { echo "::error::الملف الأساسي $f مش موجود في الريبو (راجع الاسم)"; exit 1; }
+          done
+          for f in index.html admin.html script.js manifest.json sw.js ice-theme.css; do
+            if [ -f "$f" ]; then cp "$f" www/; else echo "::warning::skip $f (not found)"; fi
+          done
+          cp *.png www/ 2>/dev/null || true
           npm install
           npx cap add android
           sed -i 's/^ext {/ext {\n    rgcfaIncludeGoogle = true/' android/variables.gradle
