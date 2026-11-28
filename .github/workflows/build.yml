@@ -23,6 +23,7 @@ jobs:
           for f in index.html script.js; do
             [ -f "$f" ] || { echo "::error::الملف الأساسي $f مش موجود في الريبو (راجع الاسم)"; exit 1; }
           done
+          [ -f admin.html ] || { [ -f iadmin.html ] && cp iadmin.html admin.html && echo "::notice::iadmin.html copied to admin.html"; }
           for f in index.html admin.html script.js manifest.json sw.js ice-theme.css; do
             b="${f%.*}"; e="${f##*.}"
             if [ -f "$f" ]; then cp "$f" "www/$f"
