@@ -24,7 +24,13 @@ jobs:
             [ -f "$f" ] || { echo "::error::الملف الأساسي $f مش موجود في الريبو (راجع الاسم)"; exit 1; }
           done
           for f in index.html admin.html script.js manifest.json sw.js ice-theme.css; do
-            if [ -f "$f" ]; then cp "$f" www/; else echo "::warning::skip $f (not found)"; fi
+            b="${f%.*}"; e="${f##*.}"
+            if [ -f "$f" ]; then cp "$f" "www/$f"
+            else
+              alt=$(ls "$b"*."$e" 2>/dev/null | head -1)
+              if [ -n "$alt" ]; then echo "::warning::$f مش موجود، هستخدم $alt بداله"; cp "$alt" "www/$f"
+              else echo "::warning::skip $f (not found)"; fi
+            fi
           done
           cp *.png www/ 2>/dev/null || true
           npm install
