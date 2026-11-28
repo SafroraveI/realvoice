@@ -79,9 +79,14 @@ code{color:#c4b5fd}.mut{color:var(--mut);font-size:12px}
           <label style="width:110px">السعر<input id="g-price" type="number" min="0" /></label>
           <label style="width:90px">الترتيب<input id="g-order" type="number" value="1" /></label>
         </div>
+        <div class="row">
+          <label class="grow">نوع الهدية<select id="g-type"><option value="normal">🎁 هدية عادية</option><option value="lucky">🍀 هدية حظ</option></select></label>
+          <label id="g-recv-wrap" style="width:170px">يصل للمستلم % من السعر<input id="g-recv" type="number" min="0" max="100" value="100" /></label>
+        </div>
+        <div class="mut" id="g-recv-note" style="margin:2px 0 8px">مثال: هدية سعرها 100 و النسبة 100% → المستلم ياخد 100 في حسابه.</div>
         <label>رابط صورة الهدية (اختياري، يظهر بدل الإيموجي)<input id="g-img" placeholder="https://..." /></label>
-        <div class="card" style="margin:10px 0;padding:12px;border:1px solid var(--line);border-radius:12px">
-          <label style="margin:0"><input id="g-luck-on" type="checkbox" style="width:auto"> 🍀 تفعيل نسبة الحظ لهذه الهدية</label>
+        <div class="card" id="g-luck-card" style="display:none;margin:10px 0;padding:12px;border:1px solid var(--line);border-radius:12px">
+          <input id="g-luck-on" type="checkbox" style="display:none"><b>🍀 جدول الحظ — اللي يرجع لحساب المرسل (مكسب أو خسارة)</b>
           <div class="mut" style="margin:6px 0">اكتب المضاعف (× سعر الهدية) ونسبة ظهوره. مجموع النسب لازم = 100%.</div>
           <div class="scroll"><table><thead><tr><th>#</th><th>المضاعف ×</th><th>النسبة %</th><th>الجائزة</th><th>الاحتمال</th></tr></thead><tbody id="lk-rows"></tbody></table></div>
           <div id="lk-sum" class="mut" style="margin:8px 0;line-height:1.9"></div>
@@ -91,8 +96,15 @@ code{color:#c4b5fd}.mut{color:var(--mut);font-size:12px}
         <div class="row"><label style="margin:0"><input id="g-active" type="checkbox" checked style="width:auto"> مفعّلة</label>
           <button class="btn ok" id="g-save" type="button">حفظ الهدية</button><button class="btn ghost" id="g-reset" type="button">جديد</button></div>
       </div>
-      <div class="card"><h2>قائمة الهدايا (تظهر في مربعات صندوق الهدايا)</h2>
-        <div class="scroll"><table><thead><tr><th>الهدية</th><th>السعر</th><th>نسبة الحظ (RTP)</th><th>الترتيب</th><th>الحالة</th><th></th></tr></thead><tbody id="g-body"></tbody></table></div>
+      <div id="g-lists">
+      <div class="card"><h2>🎁 الهدايا العادية</h2>
+        <div class="mut" style="margin-bottom:6px">عدّل السعر ونسبة وصولها للمستلم مباشرة من الجدول واضغط 💾.</div>
+        <div class="scroll"><table><thead><tr><th>الهدية</th><th>السعر 🪙</th><th>يصل للمستلم %</th><th>المستلم ياخد</th><th>الترتيب</th><th>الحالة</th><th></th></tr></thead><tbody id="g-body-normal"></tbody></table></div>
+      </div>
+      <div class="card"><h2>🍀 هدايا الحظ</h2>
+        <div class="mut" style="margin-bottom:6px">لتعديل نسب الحظ اضغط «تعديل» وغيّر جدول المضاعفات (المجموع لازم 100%).</div>
+        <div class="scroll"><table><thead><tr><th>الهدية</th><th>السعر 🪙</th><th>العائد RTP</th><th>احتمال الربح</th><th>الترتيب</th><th>الحالة</th><th></th></tr></thead><tbody id="g-body-lucky"></tbody></table></div>
+      </div>
       </div>
     </section>
 
@@ -281,9 +293,18 @@ $("r-body").onclick=e=>{
 
 function gifts(){
   const l=Object.keys(G).map(k=>Object.assign({_k:k},G[k])).sort((a,b)=>(a.order||0)-(b.order||0));
-  $("g-body").innerHTML=l.map(g=>`<tr><td>${g.image?`<img class="thumb" style="width:34px;height:34px" src="${esc(g.image)}">`:esc(g.emoji||g.e||"🎁")} <b>${esc(g.name||g.n)}</b></td><td>${num(g.price!=null?g.price:g.p)} 🪙</td><td>${g.luck&&g.luck.enabled?"🍀 "+lkRtp(g.luck.odds).toFixed(1)+"%":"—"}</td><td>${esc(g.order||0)}</td>
-    <td><span class="pill ${g.active===false?"off":""}">${g.active===false?"متوقفة":"مفعّلة"}</span></td>
-    <td><div class="row"><button class="btn sm" data-ge="${esc(g._k)}">تعديل</button><button class="btn bad sm" data-gd="${esc(g._k)}">حذف</button></div></td></tr>`).join("")||`<tr><td colspan="6" class="mut">لا توجد هدايا — الصندوق فارغ</td></tr>`;
+  const isL=g=>(g.type?g.type==="lucky":!!(g.luck&&g.luck.enabled));
+  const ico=g=>g.image?`<img class="thumb" style="width:34px;height:34px" src="${esc(g.image)}">`:esc(g.emoji||g.e||"🎁");
+  const price=g=>Number(g.price!=null?g.price:(g.p||0));
+  const st=g=>`<td><span class="pill ${g.active===false?"off":""}">${g.active===false?"متوقفة":"مفعّلة"}</span></td>`;
+  const btn=g=>`<td><div class="row"><button class="btn ok sm" data-gq="${esc(g._k)}">💾</button><button class="btn sm" data-ge="${esc(g._k)}">تعديل</button><button class="btn bad sm" data-gd="${esc(g._k)}">حذف</button></div></td>`;
+  const nm=g=>`<td>${ico(g)} <b>${esc(g.name||g.n)}</b></td>`;
+  const inp=(c,v,mx)=>`<input class="${c}" type="number" min="0"${mx?` max="${mx}"`:""} value="${v}" style="width:84px">`;
+  const N=l.filter(g=>!isL(g)),L=l.filter(isL);
+  $("g-body-normal").innerHTML=N.map(g=>{const r=g.recvPct!=null?Number(g.recvPct):100,p=price(g);
+    return `<tr>${nm(g)}<td>${inp("gi-p",p)}</td><td>${inp("gi-r",r,100)}</td><td><b>${num(Math.floor(p*r/100))}</b> 🪙</td><td>${esc(g.order||0)}</td>${st(g)}${btn(g)}</tr>`}).join("")||`<tr><td colspan="7" class="mut">لا توجد هدايا عادية</td></tr>`;
+  $("g-body-lucky").innerHTML=L.map(g=>{const o=(g.luck&&g.luck.odds)||[],win=o.filter(x=>x.mult>0).reduce((s,x)=>s+x.pct,0);
+    return `<tr>${nm(g)}<td>${inp("gi-p",price(g))}</td><td>${lkRtp(o).toFixed(1)}%</td><td>${win.toFixed(1)}%</td><td>${esc(g.order||0)}</td>${st(g)}${btn(g)}</tr>`}).join("")||`<tr><td colspan="7" class="mut">لا توجد هدايا حظ</td></tr>`;
 }
 
 const LK_DEF=[{mult:0,pct:45},{mult:0.5,pct:20},{mult:1,pct:20},{mult:2,pct:10},{mult:5,pct:4},{mult:10,pct:1}];
@@ -302,19 +323,23 @@ $("lk-sim").onclick=()=>{const l=lkRead(),tot=l.odds.reduce((s,x)=>s+x.pct,0),pr
   let paid=0,wins=0;const N=10000;for(let i=0;i<N;i++){let x=Math.random()*tot,a=0,pk=l.odds[l.odds.length-1];for(const o of l.odds){a+=o.pct;if(x<a){pk=o;break}}const r=Math.floor(price*pk.mult);paid+=r;if(r>0)wins++}
   $("lk-simout").innerHTML=`نتيجة المحاكاة: دفع المنصة <b>${num(paid)}</b> 🪙 من أصل <b>${num(price*N)}</b> 🪙 → عائد فعلي <b>${(paid/(price*N||1)*100).toFixed(1)}%</b> — مرات الربح ${(wins/N*100).toFixed(1)}%`};
 
-lkFill(null);
-function gReset(){editId=null;lkFill(null);$("lk-simout").textContent="";["g-name","g-emoji","g-price","g-img"].forEach(i=>$(i).value="");$("g-order").value=1;$("g-active").checked=true;$("g-title").textContent="🎁 إضافة هدية"}
+function gType(){const lk=$("g-type").value==="lucky";$("g-luck-card").style.display=lk?"":"none";$("g-recv-wrap").style.display=lk?"none":"";$("g-recv-note").style.display=lk?"none":"";$("g-luck-on").checked=lk;lkCalc()}
+$("g-type").onchange=gType;
+lkFill(null);gType();
+function gReset(){editId=null;lkFill(null);$("lk-simout").textContent="";["g-name","g-emoji","g-price","g-img"].forEach(i=>$(i).value="");$("g-order").value=1;$("g-active").checked=true;$("g-type").value="normal";$("g-recv").value=100;gType();$("g-title").textContent="🎁 إضافة هدية"}
 $("g-reset").onclick=gReset;
 $("g-save").onclick=()=>{
   const name=$("g-name").value.trim(),price=Math.floor(Number($("g-price").value));
   if(!name||!(price>=0))return toast("اكتب اسم الهدية وسعرها");
-  const luck=lkRead();if(luck.enabled){const t=luck.odds.reduce((s,x)=>s+x.pct,0);if(Math.abs(t-100)>0.001)return toast("مجموع نسب الحظ لازم يساوي 100%")}
-  const data={name,emoji:$("g-emoji").value.trim()||"🎁",price,image:$("g-img").value.trim(),order:Number($("g-order").value||0),active:$("g-active").checked,luck};
+  const type=$("g-type").value,recvPct=Math.min(100,Math.max(0,Number($("g-recv").value)||0));
+  const luck=type==="lucky"?lkRead():{enabled:false,odds:[]};luck.enabled=type==="lucky";if(luck.enabled){const t=luck.odds.reduce((s,x)=>s+x.pct,0);if(Math.abs(t-100)>0.001)return toast("مجموع نسب الحظ لازم يساوي 100%")}
+  const data={name,emoji:$("g-emoji").value.trim()||"🎁",price,image:$("g-img").value.trim(),order:Number($("g-order").value||0),active:$("g-active").checked,type,recvPct:type==="lucky"?100:recvPct,luck};
   run(async()=>{const k=editId||db.ref("gifts").push().key;await db.ref("gifts/"+k).set(data);await audit({action:editId?"editGift":"addGift",target:k,note:name+" — "+price});gReset();toast("تم حفظ الهدية")});
 };
-$("g-body").onclick=e=>{
-  const ed=e.target.closest("[data-ge]"),de=e.target.closest("[data-gd]");
-  if(ed){const g=G[ed.dataset.ge]||{};editId=ed.dataset.ge;$("g-name").value=g.name||g.n||"";$("g-emoji").value=g.emoji||g.e||"";$("g-price").value=g.price!=null?g.price:g.p;$("g-img").value=g.image||g.gifUrl||"";$("g-order").value=g.order||0;$("g-active").checked=g.active!==false;lkFill(g.luck);$("g-title").textContent="✏️ تعديل هدية";scrollTo({top:0,behavior:"smooth"})}
+$("g-lists").onclick=e=>{
+  const ed=e.target.closest("[data-ge]"),de=e.target.closest("[data-gd]"),qs=e.target.closest("[data-gq]");
+  if(qs){const k=qs.dataset.gq,tr=qs.closest("tr"),pr=Math.max(0,Math.floor(Number(tr.querySelector(".gi-p").value)||0)),rEl=tr.querySelector(".gi-r"),up={price:pr};if(rEl)up.recvPct=Math.min(100,Math.max(0,Number(rEl.value)||0));run(async()=>{await db.ref("gifts/"+k).update(up);await audit({action:"quickEditGift",target:k,note:JSON.stringify(up)});toast("تم الحفظ ✅")});return}
+  if(ed){const g=G[ed.dataset.ge]||{};editId=ed.dataset.ge;$("g-name").value=g.name||g.n||"";$("g-emoji").value=g.emoji||g.e||"";$("g-price").value=g.price!=null?g.price:g.p;$("g-img").value=g.image||g.gifUrl||"";$("g-order").value=g.order||0;$("g-active").checked=g.active!==false;$("g-type").value=g.type||((g.luck&&g.luck.enabled)?"lucky":"normal");$("g-recv").value=g.recvPct!=null?g.recvPct:100;lkFill(g.luck);gType();$("g-title").textContent="✏️ تعديل هدية";scrollTo({top:0,behavior:"smooth"})}
   if(de&&confirm("حذف الهدية؟"))run(async()=>{await db.ref("gifts/"+de.dataset.gd).remove();await audit({action:"deleteGift",target:de.dataset.gd});toast("تم الحذف")});
 };
 
