@@ -81,6 +81,7 @@ code{color:#c4b5fd}.mut{color:var(--mut);font-size:12px}
         </div>
         <div class="row">
           <label class="grow">نوع الهدية<select id="g-type"><option value="normal">🎁 هدية عادية</option><option value="lucky">🍀 هدية حظ</option></select></label>
+          <label style="width:130px">القسم في الصندوق<select id="g-cat"><option value="">عادة</option><option>هدايا</option><option>فعالية</option><option>مشاهير</option><option>VIP</option></select></label>
           <label id="g-recv-wrap" style="width:170px">يصل للمستلم % من السعر<input id="g-recv" type="number" min="0" max="100" value="100" /></label>
         </div>
         <div class="mut" id="g-recv-note" style="margin:2px 0 8px">مثال: هدية سعرها 100 و النسبة 100% → المستلم ياخد 100 في حسابه.</div>
@@ -326,20 +327,20 @@ $("lk-sim").onclick=()=>{const l=lkRead(),tot=l.odds.reduce((s,x)=>s+x.pct,0),pr
 function gType(){const lk=$("g-type").value==="lucky";$("g-luck-card").style.display=lk?"":"none";$("g-recv-wrap").style.display=lk?"none":"";$("g-recv-note").style.display=lk?"none":"";$("g-luck-on").checked=lk;lkCalc()}
 $("g-type").onchange=gType;
 lkFill(null);gType();
-function gReset(){editId=null;lkFill(null);$("lk-simout").textContent="";["g-name","g-emoji","g-price","g-img"].forEach(i=>$(i).value="");$("g-order").value=1;$("g-active").checked=true;$("g-type").value="normal";$("g-recv").value=100;gType();$("g-title").textContent="🎁 إضافة هدية"}
+function gReset(){editId=null;lkFill(null);$("lk-simout").textContent="";["g-name","g-emoji","g-price","g-img"].forEach(i=>$(i).value="");$("g-order").value=1;$("g-active").checked=true;$("g-type").value="normal";$("g-cat").value="";$("g-recv").value=100;gType();$("g-title").textContent="🎁 إضافة هدية"}
 $("g-reset").onclick=gReset;
 $("g-save").onclick=()=>{
   const name=$("g-name").value.trim(),price=Math.floor(Number($("g-price").value));
   if(!name||!(price>=0))return toast("اكتب اسم الهدية وسعرها");
   const type=$("g-type").value,recvPct=Math.min(100,Math.max(0,Number($("g-recv").value)||0));
   const luck=type==="lucky"?lkRead():{enabled:false,odds:[]};luck.enabled=type==="lucky";if(luck.enabled){const t=luck.odds.reduce((s,x)=>s+x.pct,0);if(Math.abs(t-100)>0.001)return toast("مجموع نسب الحظ لازم يساوي 100%")}
-  const data={name,emoji:$("g-emoji").value.trim()||"🎁",price,image:$("g-img").value.trim(),order:Number($("g-order").value||0),active:$("g-active").checked,type,recvPct:type==="lucky"?100:recvPct,luck};
+  const data={name,emoji:$("g-emoji").value.trim()||"🎁",price,image:$("g-img").value.trim(),order:Number($("g-order").value||0),active:$("g-active").checked,type,cat:$("g-cat").value,recvPct:type==="lucky"?100:recvPct,luck};
   run(async()=>{const k=editId||db.ref("gifts").push().key;await db.ref("gifts/"+k).set(data);await audit({action:editId?"editGift":"addGift",target:k,note:name+" — "+price});gReset();toast("تم حفظ الهدية")});
 };
 $("g-lists").onclick=e=>{
   const ed=e.target.closest("[data-ge]"),de=e.target.closest("[data-gd]"),qs=e.target.closest("[data-gq]");
   if(qs){const k=qs.dataset.gq,tr=qs.closest("tr"),pr=Math.max(0,Math.floor(Number(tr.querySelector(".gi-p").value)||0)),rEl=tr.querySelector(".gi-r"),up={price:pr};if(rEl)up.recvPct=Math.min(100,Math.max(0,Number(rEl.value)||0));run(async()=>{await db.ref("gifts/"+k).update(up);await audit({action:"quickEditGift",target:k,note:JSON.stringify(up)});toast("تم الحفظ ✅")});return}
-  if(ed){const g=G[ed.dataset.ge]||{};editId=ed.dataset.ge;$("g-name").value=g.name||g.n||"";$("g-emoji").value=g.emoji||g.e||"";$("g-price").value=g.price!=null?g.price:g.p;$("g-img").value=g.image||g.gifUrl||"";$("g-order").value=g.order||0;$("g-active").checked=g.active!==false;$("g-type").value=g.type||((g.luck&&g.luck.enabled)?"lucky":"normal");$("g-recv").value=g.recvPct!=null?g.recvPct:100;lkFill(g.luck);gType();$("g-title").textContent="✏️ تعديل هدية";scrollTo({top:0,behavior:"smooth"})}
+  if(ed){const g=G[ed.dataset.ge]||{};editId=ed.dataset.ge;$("g-name").value=g.name||g.n||"";$("g-emoji").value=g.emoji||g.e||"";$("g-price").value=g.price!=null?g.price:g.p;$("g-img").value=g.image||g.gifUrl||"";$("g-order").value=g.order||0;$("g-active").checked=g.active!==false;$("g-type").value=g.type||((g.luck&&g.luck.enabled)?"lucky":"normal");$("g-recv").value=g.recvPct!=null?g.recvPct:100;{const c=g.cat||g.category||"";$("g-cat").value=["هدايا","فعالية","مشاهير","VIP"].includes(c)?c:""}lkFill(g.luck);gType();$("g-title").textContent="✏️ تعديل هدية";scrollTo({top:0,behavior:"smooth"})}
   if(de&&confirm("حذف الهدية؟"))run(async()=>{await db.ref("gifts/"+de.dataset.gd).remove();await audit({action:"deleteGift",target:de.dataset.gd});toast("تم الحذف")});
 };
 
